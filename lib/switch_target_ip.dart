@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:redstone_remote_control/api.dart';
 import 'package:redstone_remote_control/tool/persist.dart';
@@ -45,26 +46,43 @@ class SwitchTargetIpState extends State<SwitchTargetIp> {
                   ),
                 ),
                 SizedBox(
-                  child: ElevatedButton(
-                      style: ButtonStyle(
-                        elevation: MaterialStateProperty.all(0),
-                        shape: MaterialStateProperty.all(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(0),
+                  child: kIsWeb
+                      ? ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (bc){
+                              return MainCon(targetIp: textEditingController.text);
+                            }));
+                          },
+                          style: ButtonStyle(
+                            elevation: MaterialStateProperty.all(0),
+                            shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(0),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      onPressed: () {
-                        Future(() async {
-                          final resPersist =
-                              await Persist.usePersist("UseTarGetIpList", "[]");
-                          final resData =
-                              List<String>.from(await resPersist.read());
-                          resData.add(textEditingController.text);
-                          resPersist.save(jsonEncode(resData));
-                        }).then((value) => setState(() => null));
-                      },
-                      child: Text("保存")),
+                          child: Text("连接"),
+                        )
+                      : ElevatedButton(
+                          style: ButtonStyle(
+                            elevation: MaterialStateProperty.all(0),
+                            shape: MaterialStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(0),
+                              ),
+                            ),
+                          ),
+                          onPressed: () {
+                            Future(() async {
+                              final resPersist = await Persist.usePersist(
+                                  "UseTarGetIpList", "[]");
+                              final resData =
+                                  List<String>.from(await resPersist.read());
+                              resData.add(textEditingController.text);
+                              resPersist.save(jsonEncode(resData));
+                            }).then((value) => setState(() => null));
+                          },
+                          child: Text("保存")),
                   height: 30,
                   width: double.infinity,
                 )
@@ -76,8 +94,9 @@ class SwitchTargetIpState extends State<SwitchTargetIp> {
 
   Future<bool> test(String host) async {
     try {
-      final res = await (new Dio(BaseOptions(sendTimeout: 1500,connectTimeout: 1500)))
-          .getUri(Api.createTargetUri(host,path: "/test"));
+      final res =
+          await (new Dio(BaseOptions(sendTimeout: 1500, connectTimeout: 1500)))
+              .getUri(ApiConfig.createTargetUri(host, path: "/test"));
       print(res.data);
       if (res.data is String) {
         return Future.value(res.data == "Hello");
@@ -122,9 +141,10 @@ class SwitchTargetIpState extends State<SwitchTargetIp> {
                   itemBuilder: (BuildContext context, int index) {
                     final resDataList = futureState.data as List<String>;
                     return ListTile(
-                      onTap: (){
-                        Navigator.push(context,MaterialPageRoute(builder: (bc){
-                          return MainCon(targetIp:resDataList[index]);
+                      onTap: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (bc) {
+                          return MainCon(targetIp: resDataList[index]);
                         }));
                       },
                       leading: Icon(Icons.phone_android),
@@ -140,15 +160,18 @@ class SwitchTargetIpState extends State<SwitchTargetIp> {
                               color: Colors.red,
                             );
                           }
-                          if (snapshot.connectionState != ConnectionState.done) {
-                            return CircularProgressIndicator(strokeWidth: 1,);
+                          if (snapshot.connectionState !=
+                              ConnectionState.done) {
+                            return CircularProgressIndicator(
+                              strokeWidth: 1,
+                            );
                           }
-                          if(snapshot.data??false){
+                          if (snapshot.data ?? false) {
                             return Icon(
                               Icons.done,
                               color: Colors.green,
                             );
-                          }else{
+                          } else {
                             return Icon(
                               Icons.close,
                               color: Colors.red,

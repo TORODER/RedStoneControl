@@ -9,7 +9,11 @@ class ConElem extends StatelessWidget {
   Function onUp;
   double? size;
 
-  ConElem({required this.onDown,required this.onUp,required this.showIcon, this.size});
+  ConElem(
+      {required this.onDown,
+      required this.onUp,
+      required this.showIcon,
+      this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +22,9 @@ class ConElem extends StatelessWidget {
         onDown();
       },
       onTapUp: (t) {
+        onUp();
+      },
+      onTapCancel: () {
         onUp();
       },
       child: Container(
@@ -38,10 +45,12 @@ class ConElem extends StatelessWidget {
 
 class MainCon extends StatefulWidget {
   int leftMsg = 0;
+  int leftSpeed = 0;
   int rightMsg = 0;
+  int rightSpeed = 0;
   String targetIp = "172.16.5.12";
 
-  MainCon({required this.targetIp });
+  MainCon({required this.targetIp});
 
   @override
   State<StatefulWidget> createState() {
@@ -50,19 +59,34 @@ class MainCon extends StatefulWidget {
 }
 
 class MainConState extends State<MainCon> {
-  setMsg({int? newLeftMsg, int? newRightMsg}) {
+  setNullState() =>
+      setMsg(newLeftMsg: 0, newRightMsg: 0, leftSpeed: 0, rightSpeed: 0);
+
+  setMsg(
+      {int? newLeftMsg,
+      int? newRightMsg,
+      int leftSpeed = 0,
+      int rightSpeed = 0}) {
     if (newLeftMsg != null) {
       this.widget.leftMsg = newLeftMsg;
     }
     if (newRightMsg != null) {
       this.widget.rightMsg = newRightMsg;
     }
+    this.widget.leftSpeed = leftSpeed;
+    this.widget.rightSpeed = rightSpeed;
     sendState().then((value) => setState(() {}));
   }
 
   Future sendState() async {
-    final sendState = [this.widget.leftMsg, this.widget.rightMsg];
-    final url = Api.createTargetUri(this.widget.targetIp,path: "/conCarRun");
+    final sendState = [
+      this.widget.leftMsg,
+      this.widget.rightMsg,
+      this.widget.leftSpeed,
+      this.widget.rightSpeed
+    ];
+    final url =
+        ApiConfig.createTargetUri(this.widget.targetIp, path: "/conCarRun");
     await new Dio(BaseOptions(sendTimeout: 500)).postUri(
       url,
       data: jsonEncode(
@@ -71,104 +95,116 @@ class MainConState extends State<MainCon> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(),
-      body:SafeArea(child:  Row(
-        children: [
-          Column(
-            children: [
-              Text("当前目标Ip: ${this.widget.targetIp}"),
-              Expanded(
-                child: Center(
-                  child: FittedBox(
-                    child: Container(
-                      width: 280,
-                      height: 280,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ConElem(
-                                  showIcon: Icon(
-                                    Icons.keyboard_arrow_up_sharp,
-                                    size: 100,
-                                  ),
-                                  size: 100,
-                                  onDown: () {
-                                    setMsg(newLeftMsg: 1, newRightMsg: 1);
-                                  },
-                                  onUp: () {
-                                    setMsg(newLeftMsg: 0, newRightMsg: 0);
-                                  },
-                                )
-                              ],
-                            ),
-                          ),
-                          Expanded(
+      body: SafeArea(
+        child: Row(
+          children: [
+            Column(
+              children: [
+                Text("当前目标Ip: ${this.widget.targetIp}"),
+                Expanded(
+                  child: Center(
+                    child: FittedBox(
+                      child: Container(
+                        width: 280,
+                        height: 280,
+                        child: Column(
+                          children: [
+                            Expanded(
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   ConElem(
-                                    showIcon: Icon(Icons.keyboard_arrow_left_sharp,
+                                    showIcon: Icon(
+                                      Icons.keyboard_arrow_up_sharp,
+                                      size: 100,
+                                    ),
+                                    size: 100,
+                                    onDown: () {
+                                      setMsg(
+                                          newLeftMsg: 1,
+                                          newRightMsg: 1,
+                                          leftSpeed: 255,
+                                          rightSpeed: 255);
+                                    },
+                                    onUp: setNullState,
+                                  )
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  ConElem(
+                                    showIcon: Icon(
+                                        Icons.keyboard_arrow_left_sharp,
                                         size: 100),
                                     size: 100,
                                     onDown: () {
-                                      setMsg(newLeftMsg: 1, newRightMsg: 0);
+                                      setMsg(
+                                          newLeftMsg: 1,
+                                          newRightMsg: 1,
+                                          leftSpeed: 255,
+                                          rightSpeed: 50);
                                     },
-                                    onUp: () {
-                                      setMsg(newLeftMsg: 0, newRightMsg: 0);
-                                    },
+                                    onUp: setNullState,
                                   ),
                                   ConElem(
-                                    showIcon: Icon(Icons.keyboard_arrow_right_sharp,
+                                    showIcon: Icon(
+                                        Icons.keyboard_arrow_right_sharp,
                                         size: 100),
                                     size: 100,
                                     onDown: () {
-                                      setMsg(newLeftMsg: 0, newRightMsg: 1);
+                                      setMsg(
+                                          newLeftMsg: 0,
+                                          newRightMsg: 1,
+                                          leftSpeed: 50,
+                                          rightSpeed: 255);
                                     },
-                                    onUp: () {
-                                      setMsg(newLeftMsg: 0, newRightMsg: 0);
-                                    },
+                                    onUp: setNullState,
                                   ),
                                 ],
-                              )),
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ConElem(
-                                  showIcon: Icon(
-                                    Icons.keyboard_arrow_down_sharp,
-                                    size: 100,
-                                  ),
-                                  size: 100,
-                                  onDown: () {
-                                    setMsg(newLeftMsg: -1, newRightMsg: -1);
-                                  },
-                                  onUp: () {
-                                    setMsg(newLeftMsg: 0, newRightMsg: 0);
-                                  },
-                                )
-                              ],
+                              ),
                             ),
-                          )
-                        ],
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  ConElem(
+                                    showIcon: Icon(
+                                      Icons.keyboard_arrow_down_sharp,
+                                      size: 100,
+                                    ),
+                                    size: 100,
+                                    onDown: () {
+                                      setMsg(
+                                          newLeftMsg: -1,
+                                          newRightMsg: -1,
+                                          leftSpeed: 255,
+                                          rightSpeed: 255);
+                                    },
+                                    onUp: setNullState,
+                                  )
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              )
-            ],
-          )
-        ],
-        mainAxisAlignment: MainAxisAlignment.center,
-      ),),
+                )
+              ],
+            )
+          ],
+          mainAxisAlignment: MainAxisAlignment.center,
+        ),
+      ),
     );
   }
 }
